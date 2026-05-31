@@ -2,8 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main] 
-
+    branches: [main] # Cambia a master si tu rama principal se llama master
   workflow_dispatch:
 
 permissions:
@@ -16,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BUILD_PATH: '.' 
+  BUILD_PATH: '.'
 
 jobs:
   build:
@@ -25,6 +24,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # ESTE BLOQUE OBLIGA A GITHUB A USAR NODE 22 SÍ O SÍ
+      - name: Force Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+
       - name: Detect package manager
         id: detect-package-manager
         run: |
@@ -42,20 +48,19 @@ jobs:
             echo "Unable to determine package manager" >> /dev/stderr
             exit 1
           fi
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-        
+
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
+
       - name: Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: npm install # Forzamos instalación limpia instalando directo de npm
         working-directory: ${{ env.BUILD_PATH }}
+
       - name: Build with Astro
-        run: ${{ steps.detect-package-manager.outputs.runner }} astro build
+        run: npx astro build # Ejecución directa de Astro build
         working-directory: ${{ env.BUILD_PATH }}
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
